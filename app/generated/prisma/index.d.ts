@@ -1994,28 +1994,33 @@ export namespace Prisma {
 
   export type PortAvgAggregateOutputType = {
     id: number | null
+    serverId: number | null
     port: number | null
   }
 
   export type PortSumAggregateOutputType = {
     id: number | null
+    serverId: number | null
     port: number | null
   }
 
   export type PortMinAggregateOutputType = {
     id: number | null
+    serverId: number | null
     note: string | null
     port: number | null
   }
 
   export type PortMaxAggregateOutputType = {
     id: number | null
+    serverId: number | null
     note: string | null
     port: number | null
   }
 
   export type PortCountAggregateOutputType = {
     id: number
+    serverId: number
     note: number
     port: number
     _all: number
@@ -2024,28 +2029,33 @@ export namespace Prisma {
 
   export type PortAvgAggregateInputType = {
     id?: true
+    serverId?: true
     port?: true
   }
 
   export type PortSumAggregateInputType = {
     id?: true
+    serverId?: true
     port?: true
   }
 
   export type PortMinAggregateInputType = {
     id?: true
+    serverId?: true
     note?: true
     port?: true
   }
 
   export type PortMaxAggregateInputType = {
     id?: true
+    serverId?: true
     note?: true
     port?: true
   }
 
   export type PortCountAggregateInputType = {
     id?: true
+    serverId?: true
     note?: true
     port?: true
     _all?: true
@@ -2139,6 +2149,7 @@ export namespace Prisma {
 
   export type PortGroupByOutputType = {
     id: number
+    serverId: number
     note: string | null
     port: number
     _count: PortCountAggregateOutputType | null
@@ -2164,35 +2175,40 @@ export namespace Prisma {
 
   export type PortSelect<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    serverId?: boolean
     note?: boolean
     port?: boolean
   }, ExtArgs["result"]["port"]>
 
   export type PortSelectCreateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    serverId?: boolean
     note?: boolean
     port?: boolean
   }, ExtArgs["result"]["port"]>
 
   export type PortSelectUpdateManyAndReturn<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetSelect<{
     id?: boolean
+    serverId?: boolean
     note?: boolean
     port?: boolean
   }, ExtArgs["result"]["port"]>
 
   export type PortSelectScalar = {
     id?: boolean
+    serverId?: boolean
     note?: boolean
     port?: boolean
   }
 
-  export type PortOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "note" | "port", ExtArgs["result"]["port"]>
+  export type PortOmit<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = $Extensions.GetOmit<"id" | "serverId" | "note" | "port", ExtArgs["result"]["port"]>
 
   export type $PortPayload<ExtArgs extends $Extensions.InternalArgs = $Extensions.DefaultArgs> = {
     name: "Port"
     objects: {}
     scalars: $Extensions.GetPayloadResult<{
       id: number
+      serverId: number
       note: string | null
       port: number
     }, ExtArgs["result"]["port"]>
@@ -2619,6 +2635,7 @@ export namespace Prisma {
    */
   interface PortFieldRefs {
     readonly id: FieldRef<"Port", 'Int'>
+    readonly serverId: FieldRef<"Port", 'Int'>
     readonly note: FieldRef<"Port", 'String'>
     readonly port: FieldRef<"Port", 'Int'>
   }
@@ -3013,6 +3030,7 @@ export namespace Prisma {
 
   export const PortScalarFieldEnum: {
     id: 'id',
+    serverId: 'serverId',
     note: 'note',
     port: 'port'
   };
@@ -3148,12 +3166,14 @@ export namespace Prisma {
     OR?: PortWhereInput[]
     NOT?: PortWhereInput | PortWhereInput[]
     id?: IntFilter<"Port"> | number
+    serverId?: IntFilter<"Port"> | number
     note?: StringNullableFilter<"Port"> | string | null
     port?: IntFilter<"Port"> | number
   }
 
   export type PortOrderByWithRelationInput = {
     id?: SortOrder
+    serverId?: SortOrder
     note?: SortOrderInput | SortOrder
     port?: SortOrder
   }
@@ -3163,12 +3183,14 @@ export namespace Prisma {
     AND?: PortWhereInput | PortWhereInput[]
     OR?: PortWhereInput[]
     NOT?: PortWhereInput | PortWhereInput[]
+    serverId?: IntFilter<"Port"> | number
     note?: StringNullableFilter<"Port"> | string | null
     port?: IntFilter<"Port"> | number
   }, "id">
 
   export type PortOrderByWithAggregationInput = {
     id?: SortOrder
+    serverId?: SortOrder
     note?: SortOrderInput | SortOrder
     port?: SortOrder
     _count?: PortCountOrderByAggregateInput
@@ -3183,6 +3205,7 @@ export namespace Prisma {
     OR?: PortScalarWhereWithAggregatesInput[]
     NOT?: PortScalarWhereWithAggregatesInput | PortScalarWhereWithAggregatesInput[]
     id?: IntWithAggregatesFilter<"Port"> | number
+    serverId?: IntWithAggregatesFilter<"Port"> | number
     note?: StringNullableWithAggregatesFilter<"Port"> | string | null
     port?: IntWithAggregatesFilter<"Port"> | number
   }
@@ -3234,40 +3257,47 @@ export namespace Prisma {
   }
 
   export type PortCreateInput = {
+    serverId: number
     note?: string | null
     port: number
   }
 
   export type PortUncheckedCreateInput = {
     id?: number
+    serverId: number
     note?: string | null
     port: number
   }
 
   export type PortUpdateInput = {
+    serverId?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     port?: IntFieldUpdateOperationsInput | number
   }
 
   export type PortUncheckedUpdateInput = {
     id?: IntFieldUpdateOperationsInput | number
+    serverId?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     port?: IntFieldUpdateOperationsInput | number
   }
 
   export type PortCreateManyInput = {
     id?: number
+    serverId: number
     note?: string | null
     port: number
   }
 
   export type PortUpdateManyMutationInput = {
+    serverId?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     port?: IntFieldUpdateOperationsInput | number
   }
 
   export type PortUncheckedUpdateManyInput = {
     id?: IntFieldUpdateOperationsInput | number
+    serverId?: IntFieldUpdateOperationsInput | number
     note?: NullableStringFieldUpdateOperationsInput | string | null
     port?: IntFieldUpdateOperationsInput | number
   }
@@ -3412,29 +3442,34 @@ export namespace Prisma {
 
   export type PortCountOrderByAggregateInput = {
     id?: SortOrder
+    serverId?: SortOrder
     note?: SortOrder
     port?: SortOrder
   }
 
   export type PortAvgOrderByAggregateInput = {
     id?: SortOrder
+    serverId?: SortOrder
     port?: SortOrder
   }
 
   export type PortMaxOrderByAggregateInput = {
     id?: SortOrder
+    serverId?: SortOrder
     note?: SortOrder
     port?: SortOrder
   }
 
   export type PortMinOrderByAggregateInput = {
     id?: SortOrder
+    serverId?: SortOrder
     note?: SortOrder
     port?: SortOrder
   }
 
   export type PortSumOrderByAggregateInput = {
     id?: SortOrder
+    serverId?: SortOrder
     port?: SortOrder
   }
 

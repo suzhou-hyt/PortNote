@@ -129,6 +129,7 @@ exports.Prisma.ServerScalarFieldEnum = {
 
 exports.Prisma.PortScalarFieldEnum = {
   id: 'id',
+  serverId: 'serverId',
   note: 'note',
   port: 'port'
 };
