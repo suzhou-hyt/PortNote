@@ -146,7 +146,7 @@ export default function Dashboard() {
         }
       };
 
-      await axios.put("/api/update", payload);
+      await axios.put("/api/edit", payload);
       await fetchData();
       (document.getElementById('edit') as HTMLDialogElement)?.close();
       setEditItem(null);
