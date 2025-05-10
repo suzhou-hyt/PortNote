@@ -37,7 +37,7 @@ export default function ErrorToast({ message, show, onClose }: ErrorToastProps) 
           />
         </svg>
         <div>
-          <span className="font-bold">ERROR:</span>
+          <span className="font-bold">ERROR: </span>
           <span>{message}</span>
         </div>
       </div>

@@ -7,7 +7,7 @@ import Cookies from "js-cookie";
 import { useRouter } from "next/navigation";
 
 export default function Home() {
-  const [email, setEmail] = useState("");
+  const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [showError, setShowError] = useState(false)
   const [error, setError] = useState("")
@@ -15,14 +15,14 @@ export default function Home() {
   const router = useRouter();
 
   const login = async () => {
-    if (!email || !password) {
+    if (!username || !password) {
       setError("Please enter both email and password")
       setShowError(true)
       return
     }
 
     try {
-      const response = await axios.post("/api/auth/login", { email, password })
+      const response = await axios.post("/api/auth/login", { username, password })
       const { token } = response.data
 
       Cookies.set("token", token, {expires: 7})
@@ -64,9 +64,9 @@ export default function Home() {
           <div className="space-y-6">
             <div>
               <label className="label font-medium">
-                <span className="label-text text-base">Email</span>
+                <span className="label-text text-base">Username</span>
               </label>
-              <input type="email" className="input input-bordered w-full" placeholder="Enter your email" onChange={(e) => setEmail(e.target.value)} />
+              <input type="email" className="input input-bordered w-full" placeholder="Enter your username" onChange={(e) => setUsername(e.target.value)} />
             </div>
 
             <div>
