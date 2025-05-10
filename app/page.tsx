@@ -2,6 +2,9 @@
 
 import { useEffect, useState } from "react"
 import axios from "axios";
+import ErrorToast from "@/components/Error";
+import Cookies from "js-cookie";
+import { useRouter } from "next/router";
 
 export default function Home() {
   const [email, setEmail] = useState("");
@@ -9,8 +12,26 @@ export default function Home() {
   const [showError, setShowError] = useState(false)
   const [error, setError] = useState("")
 
-  const login = async () => {
+  const router = useRouter();
 
+  const login = async () => {
+    if (!email || !password) {
+      setError("Please enter both email and password")
+      setShowError(true)
+      return
+    }
+
+    try {
+      const response = await axios.post("/api/auth/login", { email, password })
+      const { token } = response.data
+
+      Cookies.set("token", token, {expires: 7})
+
+      router.push("/dash")
+    } catch (error: any) {
+      setError(error.response?.data?.error || "Login failed. Please try again.")
+      setShowError(true)
+    }
   }
 
   return (
@@ -58,14 +79,11 @@ export default function Home() {
           </div>
         </fieldset>
       </div>
-      <div className="toast">
-        <div className="alert alert-error alert-soft">
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-          <span className="font-bold">ERROR:</span><span>{error}</span>
-        </div>
-      </div>
+      <ErrorToast
+        message={error}
+        show={showError}
+        onClose={() => setShowError(false)}
+      />
     </div>
   )
 }
