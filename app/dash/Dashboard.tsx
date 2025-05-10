@@ -1,6 +1,13 @@
+"use client";
 import Navbar from "@/components/Navbar"
 import { Plus } from "lucide-react"
+
+import { useEffect, useState } from "react";
+
+
 export default function Dashboard(){
+    const [isVm, setIsVm] = useState(false);
+
     return (
         <div>
             <Navbar/>
@@ -23,9 +30,51 @@ export default function Dashboard(){
                             <input type="text" placeholder="Search..." className="input input-lg outline-none focus:outline-none focus:ring-0 border-0 focus:border-0" />
                         </label>
 
-                        <button className="btn btn-square">
+                        <button className="btn btn-square" onClick={() => (document.getElementById('add') as HTMLDialogElement)?.showModal()}>
                             <Plus/>
                         </button>
+                        <dialog id="add" className="modal">
+                            <div className="modal-box">
+                                <h3 className="font-bold text-lg pb-2">Create a...</h3>
+                                <div className="tabs tabs-box">
+                                    <input type="radio" name="my_tabs_6" className="tab" aria-label="Server" defaultChecked />
+                                    <div className="tab-content bg-base-100 border-base-300 p-6 space-y-2">
+                                        <input type="text" placeholder="Name" className="input w-full" />
+                                        <input type="text" placeholder="IP" className="input w-full" />
+                                        <span className="text-sm text-gray-500">Is the server a VM?</span>
+                                        <div className="flex gap-2 items-center w-full">
+                                            <input 
+                                                type="checkbox" 
+                                                className="checkbox" 
+                                                checked={isVm}
+                                                onChange={(e) => setIsVm(e.target.checked)}
+                                            />
+                                            {isVm && (
+                                                <select defaultValue="Select a host server" className="select w-full">
+                                                    <option disabled>Select a Server</option>
+                                                    <option>Server 1</option>
+                                                </select>
+                                            )}
+                                        </div>
+                                    </div>
+
+                                    <input type="radio" name="my_tabs_6" className="tab" aria-label="Port" />
+                                    <div className="tab-content bg-base-100 border-base-300 p-6 space-y-2">
+                                        <select defaultValue="Select a host server" className="select w-full">
+                                            <option disabled>Select a Server</option>
+                                            <option>Server 1</option>
+                                        </select>
+                                        <input type="text" placeholder="Note" className="input w-full" />
+                                        <input type="number" placeholder="Port" className="input w-full" />
+                                    </div>
+                                </div>
+                                <div className="modal-action mt-auto pt-2">
+                                    <form method="dialog">
+                                        <button className="btn">Add</button>
+                                    </form>
+                                </div>
+                            </div>
+                        </dialog>
                     </div>
                 </div>
             </div>
