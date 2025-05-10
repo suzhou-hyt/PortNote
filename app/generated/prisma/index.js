@@ -149,6 +149,10 @@ const config = {
         "fromEnvVar": null,
         "value": "windows",
         "native": true
+      },
+      {
+        "fromEnvVar": null,
+        "value": "linux-musl-openssl-3.0.x"
       }
     ],
     "previewFeatures": [],
@@ -166,16 +170,17 @@ const config = {
     "db"
   ],
   "activeProvider": "postgresql",
+  "postinstall": false,
   "inlineDatasources": {
     "db": {
       "url": {
         "fromEnvVar": "DATABASE_URL",
-        "value": "postgresql://neondb_owner:npg_TQr4FPXlvq3H@ep-misty-queen-a45j56c6-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require"
+        "value": null
       }
     }
   },
-  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider = \"prisma-client-js\"\n  output   = \"../app/generated/prisma\"\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Server {\n  id   Int    @id @default(autoincrement())\n  name String\n  ip   String\n  host Int?\n}\n\nmodel Port {\n  id       Int     @id @default(autoincrement())\n  serverId Int\n  note     String?\n  port     Int\n}\n",
-  "inlineSchemaHash": "407b1c94d8218b6581cbd8d901996bf7340d0ba3825de3e79cafc166e200672e",
+  "inlineSchema": "// This is your Prisma schema file,\n// learn more about it in the docs: https://pris.ly/d/prisma-schema\n\n// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?\n// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init\n\ngenerator client {\n  provider      = \"prisma-client-js\"\n  output        = \"../app/generated/prisma\"\n  binaryTargets = [\"native\", \"linux-musl-openssl-3.0.x\"]\n}\n\ndatasource db {\n  provider = \"postgresql\"\n  url      = env(\"DATABASE_URL\")\n}\n\nmodel Server {\n  id   Int    @id @default(autoincrement())\n  name String\n  ip   String\n  host Int?\n}\n\nmodel Port {\n  id       Int     @id @default(autoincrement())\n  serverId Int\n  note     String?\n  port     Int\n}\n",
+  "inlineSchemaHash": "73769203127d4f8bff9d290fba57dc5ef14936d0f35906dca283532e4e06aa80",
   "copyEngine": true
 }
 
@@ -216,6 +221,10 @@ Object.assign(exports, Prisma)
 // file annotations for bundling tools to include these files
 path.join(__dirname, "query_engine-windows.dll.node");
 path.join(process.cwd(), "app/generated/prisma/query_engine-windows.dll.node")
+
+// file annotations for bundling tools to include these files
+path.join(__dirname, "libquery_engine-linux-musl-openssl-3.0.x.so.node");
+path.join(process.cwd(), "app/generated/prisma/libquery_engine-linux-musl-openssl-3.0.x.so.node")
 // file annotations for bundling tools to include these files
 path.join(__dirname, "schema.prisma");
 path.join(process.cwd(), "app/generated/prisma/schema.prisma")
