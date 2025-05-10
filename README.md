@@ -14,6 +14,15 @@ Stop juggling spreadsheets and guessing which service uses which port — PortNo
 Login Page:
 ![Login Page](/screenshots/login.png)
 
+Dashboard:
+![Dashboard](/screenshots/dashboard.png)
+
+Create:
+![Create](/screenshots/create.png)
+
+Random Port Generator
+![Portgen](/screenshots/portgen.png)
+
 ## Deployment
 
 Simply run this compose.yml:
