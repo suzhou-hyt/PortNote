@@ -20,6 +20,6 @@ export default function Navbar(){
             <div className="navbar-end">
                 <a className="btn btn-soft btn-error" onClick={logout}>Logout</a>
             </div>
-         </div>
+        </div>
     )
 }
