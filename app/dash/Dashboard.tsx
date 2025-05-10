@@ -1,7 +1,7 @@
 "use client";
 import Navbar from "@/components/Navbar";
 import ErrorToast from "@/components/Error";
-import { Edit, Plus, Trash, Dice5 } from "lucide-react";
+import { Edit, Plus, Trash, Dice5, Copy} from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import Fuse from "fuse.js";
@@ -37,6 +37,9 @@ export default function Dashboard() {
   const [portNote, setPortNote] = useState("");
   const [portPort, setPortPort] = useState<number | null>(null);
   const [editItem, setEditItem] = useState<Server | Port | null>(null);
+
+  const [randomPort, setRandomPort] = useState<number | null>(null);
+  const [showRandomModal, setShowRandomModal] = useState(false);
 
   const fuse = useMemo(() => new Fuse(servers, {
     keys: ['name', 'ip', 'ports.note', 'ports.port'],
@@ -168,10 +171,15 @@ export default function Dashboard() {
 
   const generateRandomPort = () => {
     const port = Math.floor(Math.random() * (65535 - 1024) + 1024);
-    setType(1);
-    setPortPort(port);
-    (document.getElementById('add') as HTMLDialogElement)?.showModal();
+    setRandomPort(port);
+    setShowRandomModal(true);
   };
+
+  const copyToClipboard = () => {
+    if (randomPort !== null) {
+     navigator.clipboard.writeText(randomPort.toString());
+    }
+};
 
   const sortedPorts = (ports: Port[]) => 
     [...ports].sort((a, b) => a.port - b.port);
@@ -217,6 +225,41 @@ export default function Dashboard() {
             >
               <Dice5/>
             </button>
+            {showRandomModal && randomPort !== null && (
+                <dialog open className="modal">
+                    <div className="modal-box max-w-xs space-y-4">
+                    <div className="text-center">
+                        <h3 className="font-bold text-xl mb-1">Random Port Generator</h3>
+                        <p className="text-sm opacity-75">Your allocated port number</p>
+                    </div>
+
+                    <div className="bg-base-200 rounded-box p-4 w-full text-center shadow-inner">
+                        <span className="text-4xl font-mono font-bold tracking-wider">
+                        {randomPort}
+                        </span>
+                    </div>
+
+                    <div className="flex flex-col w-full gap-2">
+                        <button 
+                        className="btn btn-block gap-2"
+                        onClick={copyToClipboard}
+                        title="Copy port"
+                        >
+                        <Copy size={18} className="mr-1" />
+                        Copy Port
+                        </button>
+                        
+                        <button 
+                        className="btn btn-ghost btn-sm btn-circle absolute top-2 right-2"
+                        onClick={() => setShowRandomModal(false)}
+                        title="Close"
+                        >
+                        ✕
+                        </button>
+                    </div>
+                    </div>
+                </dialog>
+                )}
 
             <button className="btn btn-square" onClick={() => (document.getElementById('add') as HTMLDialogElement)?.showModal()}>
               <Plus/>
