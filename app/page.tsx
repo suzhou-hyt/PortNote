@@ -1,4 +1,16 @@
+"use client";
+
+import { useEffect, useState } from "react"
+import axios from "axios";
+
 export default function Home() {
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+
+  const login = async () => {
+
+  }
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="flex flex-col items-center mb-8">
@@ -30,14 +42,14 @@ export default function Home() {
               <label className="label font-medium">
                 <span className="label-text text-base">Email</span>
               </label>
-              <input type="email" className="input input-bordered w-full" placeholder="Enter your email" />
+              <input type="email" className="input input-bordered w-full" placeholder="Enter your email" onChange={(e) => setEmail(e.target.value)} />
             </div>
 
             <div>
               <label className="label font-medium">
                 <span className="label-text text-base">Password</span>
               </label>
-              <input type="password" className="input input-bordered w-full" placeholder="Enter your password" />
+              <input type="password" className="input input-bordered w-full" placeholder="Enter your password" onChange={(e) => setPassword(e.target.value)}/>
             </div>
             <button className="btn btn-neutral w-full">Login</button>
           </div>
