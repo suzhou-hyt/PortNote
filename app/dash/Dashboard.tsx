@@ -70,6 +70,10 @@ export default function Dashboard() {
     }
   };
 
+  useEffect(() => {
+    fetchData()
+  }, [])
+
   const handleError = (message: string) => {
     setError(message);
     setShowError(true);
