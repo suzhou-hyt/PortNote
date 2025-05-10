@@ -1,8 +1,10 @@
 "use client";
 import Navbar from "@/components/Navbar";
-import { Plus } from "lucide-react";
-import { useEffect, useState } from "react";
+import ErrorToast from "@/components/Error";
+import { Edit, Plus, Trash, Dice5 } from "lucide-react";
+import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
+import Fuse from "fuse.js";
 
 interface Server {
   id: number;
@@ -22,6 +24,8 @@ interface Port {
 export default function Dashboard() {
   const [servers, setServers] = useState<Server[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
+  const [showError, setShowError] = useState(false);
+  const [error, setError] = useState("");
   
   // Form States
   const [isVm, setIsVm] = useState(false);
@@ -32,8 +36,19 @@ export default function Dashboard() {
   const [portServer, setPortServer] = useState<number | null>(null);
   const [portNote, setPortNote] = useState("");
   const [portPort, setPortPort] = useState<number | null>(null);
+  const [editItem, setEditItem] = useState<Server | Port | null>(null);
 
-  // Fetch initial data
+  const fuse = useMemo(() => new Fuse(servers, {
+    keys: ['name', 'ip', 'ports.note', 'ports.port'],
+    threshold: 0.3,
+    includeScore: true
+  }), [servers]);
+
+  const filteredServers = useMemo(() => {
+    if (!searchQuery) return servers;
+    return fuse.search(searchQuery).map(result => result.item);
+  }, [searchQuery, servers, fuse]);
+
   useEffect(() => {
     fetchData();
   }, []);
@@ -42,17 +57,16 @@ export default function Dashboard() {
     try {
       const response = await axios.get<Server[]>("/api/get");
       setServers(response.data);
-    } catch (error) {
-      console.error("Error fetching data:", error);
+    } catch (error: any) {
+      handleError("Error loading data: " + error.message);
     }
   };
 
-  const filteredServers = servers.filter(server =>
-    server.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    server.ip.includes(searchQuery)
-  );
+  const handleError = (message: string) => {
+    setError(message);
+    setShowError(true);
+  };
 
-  // Group servers by host
   const hostServers = filteredServers.filter(server => server.host === null);
   const vmsByHost = filteredServers.reduce((acc, server) => {
     if (server.host !== null) {
@@ -62,7 +76,24 @@ export default function Dashboard() {
     return acc;
   }, {} as Record<number, Server[]>);
 
+  const validateForm = () => {
+    if (type === 0) {
+      if (!serverName.trim() || !serverIP.trim()) {
+        handleError("Name and IP are required");
+        return false;
+      }
+    } else {
+      if (!portServer || !portPort) {
+        handleError("Server and port are required");
+        return false;
+      }
+    }
+    return true;
+  };
+
   const handleSubmit = async () => {
+    if (!validateForm()) return;
+    
     try {
       const payload = type === 0 ? {
         type,
@@ -80,8 +111,47 @@ export default function Dashboard() {
       await fetchData();
       (document.getElementById('add') as HTMLDialogElement)?.close();
       resetForm();
-    } catch (error) {
-      console.error("Submission failed:", error);
+    } catch (error: any) {
+      handleError("Creation failed: " + error.message);
+    }
+  };
+
+  const handleDelete = async (type: number, id: number) => {
+    try {
+      await axios.delete("/api/delete", { data: { type, id } });
+      await fetchData();
+    } catch (error: any) {
+      handleError("Deletion failed: " + error.message);
+    }
+  };
+
+  const handleEdit = async () => {
+    if (!editItem) return;
+    
+    try {
+      const payload = "ports" in editItem ? {
+        type: 0,
+        id: editItem.id,
+        data: {
+          name: editItem.name,
+          ip: editItem.ip,
+          host: editItem.host
+        }
+      } : {
+        type: 1,
+        id: editItem.id,
+        data: {
+          note: editItem.note,
+          port: editItem.port
+        }
+      };
+
+      await axios.put("/api/update", payload);
+      await fetchData();
+      (document.getElementById('edit') as HTMLDialogElement)?.close();
+      setEditItem(null);
+    } catch (error: any) {
+      handleError("Update failed: " + error.message);
     }
   };
 
@@ -96,15 +166,40 @@ export default function Dashboard() {
     setPortPort(null);
   };
 
+  const generateRandomPort = () => {
+    const port = Math.floor(Math.random() * (65535 - 1024) + 1024);
+    setType(1);
+    setPortPort(port);
+    (document.getElementById('add') as HTMLDialogElement)?.showModal();
+  };
+
+  const sortedPorts = (ports: Port[]) => 
+    [...ports].sort((a, b) => a.port - b.port);
+
   return (
     <div>
       <Navbar />
+      <ErrorToast
+        message={error}
+        show={showError}
+        onClose={() => setShowError(false)}
+      />
+
       <div className="grid grid-cols-12 pt-12">
         <div className="col-start-3 col-end-11">
           <div className="w-full flex gap-2">
             <label className="input w-full ">
               <svg className="h-[1em] opacity-50" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                {/* Search Icon */}
+                <g
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  strokeWidth="2.5"
+                  fill="none"
+                  stroke="currentColor"
+                >
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <path d="m21 21-4.3-4.3"></path>
+                </g>
               </svg>
               <input 
                 type="text" 
@@ -115,6 +210,14 @@ export default function Dashboard() {
               />
             </label>
 
+            <button 
+              className="btn btn-square"
+              onClick={generateRandomPort}
+              title="Generate random port"
+            >
+              <Dice5/>
+            </button>
+
             <button className="btn btn-square" onClick={() => (document.getElementById('add') as HTMLDialogElement)?.showModal()}>
               <Plus/>
             </button>
@@ -122,15 +225,14 @@ export default function Dashboard() {
             {/* Add Dialog */}
             <dialog id="add" className="modal">
               <div className="modal-box">
-                <h3 className="font-bold text-lg pb-2">Create a...</h3>
+                <h3 className="font-bold text-lg pb-2">Create...</h3>
                 <div className="tabs tabs-box">
-                  {/* Server Tab */}
                   <input 
                     type="radio" 
                     name="type" 
                     className="tab" 
                     aria-label="Server" 
-                    defaultChecked 
+                    checked={type === 0}
                     onChange={() => setType(0)}
                   />
                   <div className="tab-content bg-base-100 border-base-300 p-6 space-y-2">
@@ -140,6 +242,7 @@ export default function Dashboard() {
                       className="input w-full"
                       value={serverName}
                       onChange={(e) => setServerName(e.target.value)}
+                      required
                     />
                     <input 
                       type="text" 
@@ -147,6 +250,7 @@ export default function Dashboard() {
                       className="input w-full"
                       value={serverIP}
                       onChange={(e) => setServerIP(e.target.value)}
+                      required
                     />
                     <div className="flex gap-2 items-center">
                       <label className="label cursor-pointer">
@@ -163,8 +267,9 @@ export default function Dashboard() {
                           className="select select-bordered w-full"
                           value={serverHost || ""}
                           onChange={(e) => setServerHost(Number(e.target.value))}
+                          required
                         >
-                          <option disabled value="">Select Host</option>
+                          <option disabled value="">Select host</option>
                           {hostServers.map(server => (
                             <option key={server.id} value={server.id}>
                               {server.name}
@@ -175,12 +280,12 @@ export default function Dashboard() {
                     </div>
                   </div>
 
-                  {/* Port Tab */}
                   <input 
                     type="radio" 
                     name="type" 
                     className="tab" 
                     aria-label="Port" 
+                    checked={type === 1}
                     onChange={() => setType(1)}
                   />
                   <div className="tab-content bg-base-100 border-base-300 p-6 space-y-2">
@@ -188,8 +293,9 @@ export default function Dashboard() {
                       className="select w-full"
                       value={portServer || ""}
                       onChange={(e) => setPortServer(Number(e.target.value))}
+                      required
                     >
-                      <option disabled value="">Select Server</option>
+                      <option disabled value="">Select server</option>
                       {servers.map(server => (
                         <option key={server.id} value={server.id}>
                           {server.name}
@@ -209,6 +315,7 @@ export default function Dashboard() {
                       className="input w-full"
                       value={portPort || ""}
                       onChange={(e) => setPortPort(Number(e.target.value))}
+                      required
                     />
                   </div>
                 </div>
@@ -220,32 +327,207 @@ export default function Dashboard() {
                 </div>
               </div>
             </dialog>
+
+            {/* Edit Dialog */}
+            <dialog id="edit" className="modal">
+              <div className="modal-box">
+                <h3 className="font-bold text-lg pb-2">{editItem && "ports" in editItem ? "Edit Server" : "Edit Port"}</h3>
+                {editItem && (
+                  <div className="space-y-4">
+                    {"ports" in editItem ? (
+                      <div className="space-y-2">
+                        <input
+                          type="text"
+                          placeholder="Name"
+                          className="input w-full"
+                          value={editItem.name}
+                          onChange={(e) => setEditItem({...editItem, name: e.target.value})}
+                          required
+                        />
+                        <input
+                          type="text"
+                          placeholder="IP"
+                          className="input w-full"
+                          value={editItem.ip}
+                          onChange={(e) => setEditItem({...editItem, ip: e.target.value})}
+                          required
+                        />
+                        <div className="flex gap-2 items-center">
+                          <label className="label cursor-pointer">
+                            <span className="label-text">Is VM?</span>
+                            <input
+                              type="checkbox"
+                              className="checkbox"
+                              checked={!!editItem.host}
+                              onChange={(e) => setEditItem({
+                                ...editItem,
+                                host: e.target.checked ? editItem.host || 0 : null
+                              })}
+                            />
+                          </label>
+                          {editItem.host !== null && (
+                            <select
+                              className="select select-bordered w-full"
+                              value={editItem.host}
+                              onChange={(e) => setEditItem({
+                                ...editItem,
+                                host: Number(e.target.value)
+                              })}
+                              required
+                            >
+                              <option disabled value="">Select host</option>
+                              {hostServers.map(server => (
+                                <option key={server.id} value={server.id}>
+                                  {server.name}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <select
+                          className="select w-full"
+                          value={editItem.serverId}
+                          onChange={(e) => setEditItem({
+                            ...editItem,
+                            serverId: Number(e.target.value)
+                          })}
+                          required
+                        >
+                          {servers.map(server => (
+                            <option key={server.id} value={server.id}>
+                              {server.name}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          placeholder="Note"
+                          className="input w-full"
+                          value={editItem.note || ""}
+                          onChange={(e) => setEditItem({
+                            ...editItem,
+                            note: e.target.value
+                          })}
+                        />
+                        <input
+                          type="number"
+                          placeholder="Port"
+                          className="input w-full"
+                          value={editItem.port}
+                          onChange={(e) => setEditItem({
+                            ...editItem,
+                            port: Number(e.target.value)
+                          })}
+                          required
+                        />
+                      </div>
+                    )}
+                    <div className="modal-action">
+                      <button className="btn" onClick={handleEdit}>Save</button>
+                      <button className="btn btn-ghost" onClick={() => {
+                        (document.getElementById('edit') as HTMLDialogElement)?.close();
+                        setEditItem(null);
+                      }}>
+                        Cancel
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </dialog>
           </div>
 
           {/* Server List */}
           <div className="mt-8 space-y-4">
             {hostServers.map(server => (
               <div key={server.id} className="bg-base-200 p-4 rounded-lg">
-                <div className="font-bold text-lg">{server.name}</div>
+                <div className="flex items-center gap-2">
+                  <div className="font-bold text-lg flex-1">{server.name}</div>
+                  <button
+                    className="btn btn-xs btn-ghost"
+                    onClick={() => {
+                      setEditItem(server);
+                      (document.getElementById('edit') as HTMLDialogElement)?.showModal();
+                    }}
+                  >
+                    <Edit size={14} />
+                  </button>
+                  <button
+                    className="btn btn-xs btn-ghost text-error"
+                    onClick={() => handleDelete(0, server.id)}
+                  >
+                    <Trash size={14} />
+                  </button>
+                </div>
                 <div className="text-sm opacity-75">{server.ip}</div>
                 
-                {/* Ports */}
-                {server.ports.map(port => (
-                  <div key={port.id} className="ml-4 mt-2">
+                {sortedPorts(server.ports).map(port => (
+                  <div key={port.id} className="ml-4 mt-2 flex items-center gap-2">
                     <div className="badge badge-neutral">{port.port}</div>
-                    <span className="ml-2 text-sm">{port.note}</span>
+                    <span className="ml-2 text-sm flex-1">{port.note}</span>
+                    <button 
+                      className="btn btn-xs btn-ghost"
+                      onClick={() => {
+                        setEditItem(port);
+                        (document.getElementById('edit') as HTMLDialogElement)?.showModal();
+                      }}
+                    >
+                      <Edit size={14} />
+                    </button>
+                    <button 
+                      className="btn btn-xs btn-ghost text-error"
+                      onClick={() => handleDelete(1, port.id)}
+                    >
+                      <Trash size={14} />
+                    </button>
                   </div>
                 ))}
 
-                {/* VMs */}
                 {vmsByHost[server.id]?.map(vm => (
                   <div key={vm.id} className="ml-4 mt-4 border-l-2 pl-4">
-                    <div className="font-medium">🖥️ {vm.name}</div>
+                    <div className="flex items-center gap-2">
+                      <div className="font-medium">🖥️ {vm.name}</div>
+                      <div className="ml-auto flex gap-2">
+                        <button
+                          className="btn btn-xs btn-ghost"
+                          onClick={() => {
+                            setEditItem(vm);
+                            (document.getElementById('edit') as HTMLDialogElement)?.showModal();
+                          }}
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <button
+                          className="btn btn-xs btn-ghost text-error"
+                          onClick={() => handleDelete(0, vm.id)}
+                        >
+                          <Trash size={14} />
+                        </button>
+                      </div>
+                    </div>
                     <div className="text-sm opacity-75">{vm.ip}</div>
-                    {vm.ports.map(port => (
-                      <div key={port.id} className="ml-4 mt-2">
+                    {sortedPorts(vm.ports).map(port => (
+                      <div key={port.id} className="ml-4 mt-2 flex items-center gap-2">
                         <div className="badge badge-neutral">{port.port}</div>
-                        <span className="ml-2 text-sm">{port.note}</span>
+                        <span className="ml-2 text-sm flex-1">{port.note}</span>
+                        <button 
+                          className="btn btn-xs btn-ghost"
+                          onClick={() => {
+                            setEditItem(port);
+                            (document.getElementById('edit') as HTMLDialogElement)?.showModal();
+                          }}
+                        >
+                          <Edit size={14} />
+                        </button>
+                        <button 
+                          className="btn btn-xs btn-ghost text-error"
+                          onClick={() => handleDelete(1, port.id)}
+                        >
+                          <Trash size={14} />
+                        </button>
                       </div>
                     ))}
                   </div>
@@ -256,5 +538,5 @@ export default function Dashboard() {
         </div>
       </div>
     </div>
-  )
+  );
 }
