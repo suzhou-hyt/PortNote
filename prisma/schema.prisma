@@ -13,3 +13,16 @@ datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
 }
+
+model Server {
+  id        Int         @id @default(autoincrement())
+  name      String
+  ip        String
+  host      Int?         
+}
+
+model Port {
+  id        Int         @id @default(autoincrement())
+  note      String?
+  port      Int
+}
