@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import axios from "axios";
 import ErrorToast from "@/components/Error";
 import Cookies from "js-cookie";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 
 export default function Home() {
   const [email, setEmail] = useState("");
@@ -75,7 +75,7 @@ export default function Home() {
               </label>
               <input type="password" className="input input-bordered w-full" placeholder="Enter your password" onChange={(e) => setPassword(e.target.value)}/>
             </div>
-            <button className="btn btn-neutral w-full">Login</button>
+            <button className="btn btn-neutral w-full" onClick={login}>Login</button>
           </div>
         </fieldset>
       </div>
