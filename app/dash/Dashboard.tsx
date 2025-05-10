@@ -8,6 +8,15 @@ import { useEffect, useState } from "react";
 export default function Dashboard(){
     const [isVm, setIsVm] = useState(false);
 
+    const [type, setType] = useState(0);
+    const [serverName, setServerName] = useState("");
+    const [serverIP, setServerIP] = useState("");
+    const [serverHost, setServerHost] = useState(0)
+    const [portServer, setPortServer] = useState(0)
+    const [portNote, setPortNote] = useState("")
+    const [portPort, setPortPort] = useState(0)
+
+
     return (
         <div>
             <Navbar/>
