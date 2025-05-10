@@ -6,6 +6,8 @@ import axios from "axios";
 export default function Home() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showError, setShowError] = useState(false)
+  const [error, setError] = useState("")
 
   const login = async () => {
 
@@ -37,6 +39,7 @@ export default function Home() {
         <fieldset className="fieldset bg-base-200 border-base-300 rounded-box border p-8">
           <legend className="fieldset-legend text-xl font-bold px-4">Login</legend>
 
+          
           <div className="space-y-6">
             <div>
               <label className="label font-medium">
@@ -54,6 +57,14 @@ export default function Home() {
             <button className="btn btn-neutral w-full">Login</button>
           </div>
         </fieldset>
+      </div>
+      <div className="toast">
+        <div className="alert alert-error alert-soft">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 shrink-0 stroke-current" fill="none" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span className="font-bold">ERROR:</span><span>{error}</span>
+        </div>
       </div>
     </div>
   )
