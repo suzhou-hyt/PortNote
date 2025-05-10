@@ -34,6 +34,12 @@ export default function Home() {
     }
   }
 
+  useEffect(() => {
+    if(Cookies.get("token")){
+      router.push("/dash")
+    }
+  }, [])
+
   return (
     <div className="min-h-screen flex flex-col items-center justify-center p-4">
       <div className="flex flex-col items-center mb-8">
