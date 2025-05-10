@@ -46,15 +46,20 @@ export default function Dashboard() {
     threshold: 0.3,
     includeScore: true
   }), [servers]);
-
+  
   const filteredServers = useMemo(() => {
     if (!searchQuery) return servers;
+  
+    const isNumericQuery = /^\d+$/.test(searchQuery);
+    if (isNumericQuery) {
+      const portNumber = parseInt(searchQuery, 10);
+      return servers.filter(server => 
+        server.ports.some(port => port.port === portNumber)
+      );
+    }
+  
     return fuse.search(searchQuery).map(result => result.item);
   }, [searchQuery, servers, fuse]);
-
-  useEffect(() => {
-    fetchData();
-  }, []);
 
   const fetchData = async () => {
     try {
