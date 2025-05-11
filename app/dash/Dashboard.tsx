@@ -554,7 +554,7 @@ export default function Dashboard() {
                 
                 {sortedPorts(server.ports).map(port => (
                   <div key={port.id} className="ml-4 mt-2 flex items-center gap-2">
-                    <div className="badge badge-neutral">{port.port}</div>
+                    <div className="badge badge-neutral w-16">{port.port}</div>
                     <span className="ml-2 text-sm flex-1">{port.note}</span>
                     <button 
                       className="btn btn-xs btn-ghost"
@@ -605,7 +605,7 @@ export default function Dashboard() {
                     <div className="text-sm opacity-75">{vm.ip}</div>
                     {sortedPorts(vm.ports).map(port => (
                       <div key={port.id} className="ml-4 mt-2 flex items-center gap-2">
-                        <div className="badge badge-neutral">{port.port}</div>
+                        <div className="badge badge-neutral w-16">{port.port}</div>
                         <span className="ml-2 text-sm flex-1">{port.note}</span>
                         <button 
                           className="btn btn-xs btn-ghost"
