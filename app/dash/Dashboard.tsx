@@ -42,6 +42,9 @@ export default function Dashboard() {
   const [randomPort, setRandomPort] = useState<number | null>(null);
   const [showRandomModal, setShowRandomModal] = useState(false);
 
+  const [isScanning, setIsScanning] = useState(false);
+  const [showRefreshMessage, setShowRefreshMessage] = useState(false);
+
   const fuse = useMemo(() => new Fuse(servers, {
     keys: ['name', 'ip', 'ports.note', 'ports.port'],
     threshold: 0.3,
@@ -176,15 +179,19 @@ export default function Dashboard() {
 
   const handleScan = async (id: number) => {
     try {
-      const payload = {
-        serverId: id
-      }
+      setIsScanning(true);
+      setShowRefreshMessage(false);
+      const payload = { serverId: id };
       await axios.post("/api/scan", payload);
-      //await fetchData();
+      setTimeout(() => {
+        setShowRefreshMessage(true);
+      }, 30000);
     } catch (error: any) {
       handleError("Scan failed: " + error.message);
+      setIsScanning(false);
+      setShowRefreshMessage(false);
     }
-  }
+  };
 
   const resetForm = () => {
     setType(0);
@@ -243,7 +250,57 @@ const generateRandomPort = () => {
         show={showError}
         onClose={() => setShowError(false)}
       />
-
+{isScanning && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <div className="flex flex-col items-center justify-center gap-4">
+              {!showRefreshMessage ? (
+                <>
+                  <span className="loading loading-spinner text-primary loading-lg"></span>
+                  <p className="text-center">Scanning ports... This may take up to 30 seconds.</p>
+                </>
+              ) : (
+                <p className="text-center">Scan completed. Please refresh the page to view the new data.</p>
+              )}
+            </div>
+            <div className="modal-action">
+              {showRefreshMessage ? (
+                <>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setIsScanning(false);
+                      setShowRefreshMessage(false);
+                      fetchData();
+                    }}
+                  >
+                    Refresh Data
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      setIsScanning(false);
+                      setShowRefreshMessage(false);
+                    }}
+                  >
+                    Close
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="btn"
+                  onClick={() => {
+                    setIsScanning(false);
+                    setShowRefreshMessage(false);
+                  }}
+                >
+                  Close
+                </button>
+              )}
+            </div>
+          </div>
+        </dialog>
+      )}
       <div className="grid grid-cols-12 pt-12">
         <div className="col-start-3 col-end-11">
           <div className="w-full flex gap-2">
