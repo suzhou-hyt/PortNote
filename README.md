@@ -43,9 +43,7 @@ services:
     image: haedlessdev/portnote-agent:latest
     environment:
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/postgres"
-    depends_on:
-      db:
-        condition: service_healthy
+
   db:
     image: postgres:17
     restart: always
