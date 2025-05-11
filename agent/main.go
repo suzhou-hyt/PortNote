@@ -19,7 +19,7 @@ const (
 	workerCount  = 2000
 	maxPort      = 65535
 	dbMaxConns   = 5
-	connString   = "postgres://user:password@localhost:5432/dbname"
+	connString   = "postgresql://neondb_owner:npg_TQr4FPXlvq3H@ep-misty-queen-a45j56c6-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require"
 )
 
 type Server struct {
@@ -56,7 +56,7 @@ func main() {
 func processScans(db *pgxpool.Pool) {
 	ctx := context.Background()
 
-	rows, err := db.Query(ctx, "SELECT serverId FROM scan")
+	rows, err := db.Query(ctx, `SELECT "serverId" FROM "Scan"`)
 	if err != nil {
 		fmt.Printf("Error fetching scans: %v\n", err)
 		return
@@ -72,7 +72,7 @@ func processScans(db *pgxpool.Pool) {
 
 		var server Server
 		err := db.QueryRow(ctx,
-			"SELECT id, ip FROM server WHERE id = $1", serverID).Scan(&server.ID, &server.IP)
+			`SELECT id, ip FROM "Server" WHERE id = $1`, serverID).Scan(&server.ID, &server.IP)
 		if err != nil {
 			fmt.Printf("Error fetching server %d: %v\n", serverID, err)
 			continue
@@ -85,7 +85,7 @@ func processScans(db *pgxpool.Pool) {
 			continue
 		}
 
-		_, err = db.Exec(ctx, "DELETE FROM scan WHERE serverId = $1", serverID)
+		_, err = db.Exec(ctx, `DELETE FROM "Scan" WHERE "serverId" = $1`, serverID)
 		if err != nil {
 			fmt.Printf("Error deleting scan entry: %v\n", err)
 		}
@@ -139,12 +139,36 @@ func scanPorts(ip string) []int {
 func savePorts(db *pgxpool.Pool, serverID int, ports []int) error {
 	ctx := context.Background()
 
-	batch := &pgx.Batch{}
+	existingPorts := make(map[int]struct{})
+	rows, err := db.Query(ctx, `SELECT port FROM "Port" WHERE "serverId" = $1`, serverID)
+	if err != nil {
+		return fmt.Errorf("error querying existing ports: %w", err)
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		var port int
+		if err := rows.Scan(&port); err != nil {
+			return fmt.Errorf("error scanning port: %w", err)
+		}
+		existingPorts[port] = struct{}{}
+	}
+
+	var newPorts []int
 	for _, port := range ports {
+		if _, exists := existingPorts[port]; !exists {
+			newPorts = append(newPorts, port)
+		}
+	}
+
+	if len(newPorts) == 0 {
+		return nil
+	}
+
+	batch := &pgx.Batch{}
+	for _, port := range newPorts {
 		batch.Queue(
-			`INSERT INTO port (serverId, port) 
-			VALUES ($1, $2) 
-			ON CONFLICT (serverId, port) DO NOTHING`,
+			`INSERT INTO "Port" ("serverId", port) VALUES ($1, $2)`,
 			serverID,
 			port,
 		)
@@ -153,7 +177,7 @@ func savePorts(db *pgxpool.Pool, serverID int, ports []int) error {
 	results := db.SendBatch(ctx, batch)
 	defer results.Close()
 
-	_, err := results.Exec()
+	_, err = results.Exec()
 	if err != nil {
 		return fmt.Errorf("batch insert error: %w", err)
 	}

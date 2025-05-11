@@ -11,6 +11,7 @@ interface DeleteRequest {
 export async function DELETE(request: NextRequest) {
   try {
     const { type, id }: DeleteRequest = await request.json();
+    console.log(type)
 
     if (type === 0) {
       // Find all VM IDs belonging to the host server
@@ -40,6 +41,7 @@ export async function DELETE(request: NextRequest) {
 
     } else if (type === 2) {
       // Port: delete a single port
+      console.log(id)
       await prisma.port.delete({ where: { id } });
 
     } else {

@@ -1,7 +1,7 @@
 "use client";
 import Navbar from "@/components/Navbar";
 import ErrorToast from "@/components/Error";
-import { Edit, Plus, Trash, Dice5, Copy} from "lucide-react";
+import { Edit, Plus, Trash, Dice5, Copy, ScanSearch} from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import Fuse from "fuse.js";
@@ -166,6 +166,18 @@ export default function Dashboard() {
       handleError("Update failed: " + error.message);
     }
   };
+
+  const handleScan = async (id: number) => {
+    try {
+      const payload = {
+        serverId: id
+      }
+      await axios.post("/api/scan", payload);
+      //await fetchData();
+    } catch (error: any) {
+      handleError("Scan failed: " + error.message);
+    }
+  }
 
   const resetForm = () => {
     setType(0);
@@ -497,7 +509,15 @@ export default function Dashboard() {
             {hostServers.map(server => (
               <div key={server.id} className="bg-base-200 p-4 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <div className="font-bold text-lg flex-1">{server.name}</div>
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="font-bold text-lg">{server.name}</div>
+                    <button
+                      className="btn btn-xs btn-ghost text-primary"
+                      onClick={() => handleScan(server.id)}
+                    >
+                      <ScanSearch size={14} />
+                    </button>
+                  </div>
                   <button
                     className="btn btn-xs btn-ghost"
                     onClick={() => {
@@ -542,6 +562,12 @@ export default function Dashboard() {
                   <div key={vm.id} className="ml-4 mt-4 border-l-2 pl-4">
                     <div className="flex items-center gap-2">
                       <div className="font-medium">🖥️ {vm.name}</div>
+                      <button
+                    className="btn btn-xs btn-ghost text-primary"
+                    onClick={() => handleScan(vm.id)}
+                  >
+                    <ScanSearch size={14} />
+                  </button>
                       <div className="ml-auto flex gap-2">
                         <button
                           className="btn btn-xs btn-ghost"
