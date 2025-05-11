@@ -1,6 +1,6 @@
 module portnote-agent
 
-go 1.24.1
+go 1.24
 
 require github.com/jackc/pgx/v4 v4.18.3
 

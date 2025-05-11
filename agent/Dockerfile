@@ -1,6 +1,6 @@
 # --- Build Stage ---
 # Multi-Arch Builder mit expliziter Plattform-Angabe
-FROM --platform=$BUILDPLATFORM golang:1.19-alpine AS builder
+FROM --platform=$BUILDPLATFORM golang:1.24-alpine AS builder
 
 ARG TARGETOS TARGETARCH
 
@@ -17,7 +17,7 @@ RUN go mod download
 COPY . .
 
 # Cross-Compile für Zielarchitektur
-RUN go build -ldflags="-w -s" -o app ./cmd/agent
+RUN go build -ldflags="-w -s" -o app
 
 # --- Run Stage ---
 # Multi-Arch Laufzeit-Image
