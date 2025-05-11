@@ -551,7 +551,7 @@ export default function Dashboard() {
                     </button>
                     <button 
                       className="btn btn-xs btn-ghost text-error"
-                      onClick={() => handleDelete(1, port.id)}
+                      onClick={() => handleDelete(2, port.id)}
                     >
                       <Trash size={14} />
                     </button>
@@ -580,7 +580,7 @@ export default function Dashboard() {
                         </button>
                         <button
                           className="btn btn-xs btn-ghost text-error"
-                          onClick={() => handleDelete(0, vm.id)}
+                          onClick={() => handleDelete(1, vm.id)}
                         >
                           <Trash size={14} />
                         </button>
@@ -602,7 +602,7 @@ export default function Dashboard() {
                         </button>
                         <button 
                           className="btn btn-xs btn-ghost text-error"
-                          onClick={() => handleDelete(1, port.id)}
+                          onClick={() => handleDelete(2, port.id)}
                         >
                           <Trash size={14} />
                         </button>
