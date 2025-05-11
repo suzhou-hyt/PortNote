@@ -5,6 +5,7 @@ import { Edit, Plus, Trash, Dice5, Copy, ScanSearch} from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import Fuse from "fuse.js";
+import Footer from "@/components/Footer"
 
 interface Server {
   id: number;
@@ -206,7 +207,7 @@ export default function Dashboard() {
     [...ports].sort((a, b) => a.port - b.port);
 
   return (
-    <div>
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <ErrorToast
         message={error}
@@ -631,6 +632,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
