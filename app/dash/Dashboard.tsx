@@ -88,7 +88,7 @@ export default function Dashboard() {
     }
     return acc;
   }, {} as Record<number, Server[]>);
-
+  
   const validateForm = () => {
     if (type === 0) {
       if (!serverName.trim() || !serverIP.trim()) {
@@ -100,9 +100,15 @@ export default function Dashboard() {
         handleError("Server and port are required");
         return false;
       }
+      
+      if (usedPorts.has(portPort)) {
+        handleError("Port is already in use");
+        return false;
+      }
     }
     return true;
   };
+  
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
@@ -191,11 +197,34 @@ export default function Dashboard() {
     setPortPort(null);
   };
 
-  const generateRandomPort = () => {
-    const port = Math.floor(Math.random() * (65535 - 1024) + 1024);
-    setRandomPort(port);
-    setShowRandomModal(true);
-  };
+// Neue useMemo-Deklaration für verwendete Ports
+const usedPorts = useMemo(() => {
+  const ports = new Set<number>();
+  servers.forEach(server => {
+    server.ports.forEach(port => ports.add(port.port));
+  });
+  return ports;
+}, [servers]);
+
+// Überarbeitete generateRandomPort Funktion
+const generateRandomPort = () => {
+  let port;
+  let attempts = 0;
+  
+  // Generiere Ports bis ein freier gefunden wird (max 1000 Versuche)
+  do {
+    port = Math.floor(Math.random() * (65535 - 1024) + 1024);
+    attempts++;
+  } while (usedPorts.has(port) && attempts < 1000);
+
+  if (attempts >= 1000) {
+    handleError("Could not find free port after 1000 attempts");
+    return;
+  }
+
+  setRandomPort(port);
+  setShowRandomModal(true);
+};
 
   const copyToClipboard = () => {
     if (randomPort !== null) {
@@ -380,6 +409,8 @@ export default function Dashboard() {
                       className="input w-full"
                       value={portPort || ""}
                       onChange={(e) => setPortPort(Number(e.target.value))}
+                      min="0"
+                      max="65535"
                       required
                     />
                   </div>
@@ -502,6 +533,8 @@ export default function Dashboard() {
                             ...editItem,
                             port: Number(e.target.value)
                           })}
+                          min="0"
+                          max="65535"
                           required
                         />
                       </div>
