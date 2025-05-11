@@ -423,30 +423,46 @@ export default function Dashboard() {
                               type="checkbox"
                               className="checkbox"
                               checked={!!editItem.host}
-                              onChange={(e) => setEditItem({
-                                ...editItem,
-                                host: e.target.checked ? editItem.host || 0 : null
-                              })}
+                              onChange={(e) => {
+                                const isVmChecked = e.target.checked;
+                                if (isVmChecked) {
+                                  // Get available hosts excluding the current server
+                                  const availableHosts = hostServers.filter(s => s.id !== editItem.id);
+                                  const newHost = availableHosts.length > 0 ? availableHosts[0].id : null;
+                                  setEditItem({
+                                    ...editItem,
+                                    host: newHost
+                                  });
+                                } else {
+                                  setEditItem({
+                                    ...editItem,
+                                    host: null
+                                  });
+                                }
+                              }}
+                              
                             />
                           </label>
                           {editItem.host !== null && (
-                            <select
-                              className="select select-bordered w-full"
-                              value={editItem.host}
-                              onChange={(e) => setEditItem({
-                                ...editItem,
-                                host: Number(e.target.value)
-                              })}
-                              required
-                            >
-                              <option disabled value="">Select host</option>
-                              {hostServers.map(server => (
-                                <option key={server.id} value={server.id}>
-                                  {server.name}
-                                </option>
-                              ))}
-                            </select>
-                          )}
+  <select
+    className="select select-bordered w-full"
+    value={editItem.host}
+    onChange={(e) => setEditItem({
+      ...editItem,
+      host: Number(e.target.value)
+    })}
+    required
+  >
+    <option disabled value="">Select host</option>
+    {hostServers
+      .filter(server => server.id !== editItem.id) // Exclude current server
+      .map(server => (
+        <option key={server.id} value={server.id}>
+          {server.name}
+        </option>
+      ))}
+  </select>
+)}
                         </div>
                       </div>
                     ) : (
