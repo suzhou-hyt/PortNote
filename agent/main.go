@@ -19,7 +19,10 @@ const (
 	workerCount  = 2000
 	maxPort      = 65535
 	dbMaxConns   = 5
-	connString   = "postgresql://neondb_owner:npg_TQr4FPXlvq3H@ep-misty-queen-a45j56c6-pooler.us-east-1.aws.neon.tech/neondb?sslmode=require"
+)
+
+var (
+	connString = os.Getenv("DATABASE_URL") // Changed to var
 )
 
 type Server struct {
