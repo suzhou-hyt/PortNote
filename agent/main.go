@@ -15,7 +15,7 @@ import (
 
 const (
 	scanInterval = 10 * time.Second
-	scanTimeout  = 100 * time.Millisecond
+	scanTimeout  = 750 * time.Millisecond
 	workerCount  = 2000
 	maxPort      = 65535
 	dbMaxConns   = 5
