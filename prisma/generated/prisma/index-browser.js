@@ -134,6 +134,11 @@ exports.Prisma.PortScalarFieldEnum = {
   port: 'port'
 };
 
+exports.Prisma.ScanScalarFieldEnum = {
+  id: 'id',
+  serverId: 'serverId'
+};
+
 exports.Prisma.SortOrder = {
   asc: 'asc',
   desc: 'desc'
@@ -152,7 +157,8 @@ exports.Prisma.NullsOrder = {
 
 exports.Prisma.ModelName = {
   Server: 'Server',
-  Port: 'Port'
+  Port: 'Port',
+  Scan: 'Scan'
 };
 
 /**
