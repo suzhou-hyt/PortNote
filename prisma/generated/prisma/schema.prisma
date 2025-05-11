@@ -28,3 +28,8 @@ model Port {
   note     String?
   port     Int
 }
+
+model Scan {
+  id       Int @id @default(autoincrement())
+  serverId Int
+}

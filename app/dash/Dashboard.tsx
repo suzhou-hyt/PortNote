@@ -1,10 +1,11 @@
 "use client";
 import Navbar from "@/components/Navbar";
 import ErrorToast from "@/components/Error";
-import { Edit, Plus, Trash, Dice5, Copy} from "lucide-react";
+import { Edit, Plus, Trash, Dice5, Copy, ScanSearch} from "lucide-react";
 import { useEffect, useState, useMemo } from "react";
 import axios from "axios";
 import Fuse from "fuse.js";
+import Footer from "@/components/Footer"
 
 interface Server {
   id: number;
@@ -40,6 +41,9 @@ export default function Dashboard() {
 
   const [randomPort, setRandomPort] = useState<number | null>(null);
   const [showRandomModal, setShowRandomModal] = useState(false);
+
+  const [isScanning, setIsScanning] = useState(false);
+  const [showRefreshMessage, setShowRefreshMessage] = useState(false);
 
   const fuse = useMemo(() => new Fuse(servers, {
     keys: ['name', 'ip', 'ports.note', 'ports.port'],
@@ -87,7 +91,7 @@ export default function Dashboard() {
     }
     return acc;
   }, {} as Record<number, Server[]>);
-
+  
   const validateForm = () => {
     if (type === 0) {
       if (!serverName.trim() || !serverIP.trim()) {
@@ -99,9 +103,15 @@ export default function Dashboard() {
         handleError("Server and port are required");
         return false;
       }
+      
+      if (usedPorts.has(portPort)) {
+        handleError("Port is already in use");
+        return false;
+      }
     }
     return true;
   };
+  
 
   const handleSubmit = async () => {
     if (!validateForm()) return;
@@ -167,6 +177,22 @@ export default function Dashboard() {
     }
   };
 
+  const handleScan = async (id: number) => {
+    try {
+      setIsScanning(true);
+      setShowRefreshMessage(false);
+      const payload = { serverId: id };
+      await axios.post("/api/scan", payload);
+      setTimeout(() => {
+        setShowRefreshMessage(true);
+      }, 30000);
+    } catch (error: any) {
+      handleError("Scan failed: " + error.message);
+      setIsScanning(false);
+      setShowRefreshMessage(false);
+    }
+  };
+
   const resetForm = () => {
     setType(0);
     setServerName("");
@@ -178,11 +204,34 @@ export default function Dashboard() {
     setPortPort(null);
   };
 
-  const generateRandomPort = () => {
-    const port = Math.floor(Math.random() * (65535 - 1024) + 1024);
-    setRandomPort(port);
-    setShowRandomModal(true);
-  };
+// Neue useMemo-Deklaration für verwendete Ports
+const usedPorts = useMemo(() => {
+  const ports = new Set<number>();
+  servers.forEach(server => {
+    server.ports.forEach(port => ports.add(port.port));
+  });
+  return ports;
+}, [servers]);
+
+// Überarbeitete generateRandomPort Funktion
+const generateRandomPort = () => {
+  let port;
+  let attempts = 0;
+  
+  // Generiere Ports bis ein freier gefunden wird (max 1000 Versuche)
+  do {
+    port = Math.floor(Math.random() * (65535 - 1024) + 1024);
+    attempts++;
+  } while (usedPorts.has(port) && attempts < 1000);
+
+  if (attempts >= 1000) {
+    handleError("Could not find free port after 1000 attempts");
+    return;
+  }
+
+  setRandomPort(port);
+  setShowRandomModal(true);
+};
 
   const copyToClipboard = () => {
     if (randomPort !== null) {
@@ -194,14 +243,64 @@ export default function Dashboard() {
     [...ports].sort((a, b) => a.port - b.port);
 
   return (
-    <div>
+    <div className="min-h-screen flex flex-col">
       <Navbar />
       <ErrorToast
         message={error}
         show={showError}
         onClose={() => setShowError(false)}
       />
-
+{isScanning && (
+        <dialog className="modal modal-open">
+          <div className="modal-box">
+            <div className="flex flex-col items-center justify-center gap-4">
+              {!showRefreshMessage ? (
+                <>
+                  <span className="loading loading-spinner text-primary loading-lg"></span>
+                  <p className="text-center">Scanning ports... This may take up to 30 seconds.</p>
+                </>
+              ) : (
+                <p className="text-center">Scan completed. Please refresh the page to view the new data.</p>
+              )}
+            </div>
+            <div className="modal-action">
+              {showRefreshMessage ? (
+                <>
+                  <button
+                    className="btn btn-primary"
+                    onClick={() => {
+                      setIsScanning(false);
+                      setShowRefreshMessage(false);
+                      fetchData();
+                    }}
+                  >
+                    Refresh Data
+                  </button>
+                  <button
+                    className="btn"
+                    onClick={() => {
+                      setIsScanning(false);
+                      setShowRefreshMessage(false);
+                    }}
+                  >
+                    Close
+                  </button>
+                </>
+              ) : (
+                <button
+                  className="btn"
+                  onClick={() => {
+                    setIsScanning(false);
+                    setShowRefreshMessage(false);
+                  }}
+                >
+                  Close
+                </button>
+              )}
+            </div>
+          </div>
+        </dialog>
+      )}
       <div className="grid grid-cols-12 pt-12">
         <div className="col-start-3 col-end-11">
           <div className="w-full flex gap-2">
@@ -367,6 +466,8 @@ export default function Dashboard() {
                       className="input w-full"
                       value={portPort || ""}
                       onChange={(e) => setPortPort(Number(e.target.value))}
+                      min="0"
+                      max="65535"
                       required
                     />
                   </div>
@@ -411,30 +512,46 @@ export default function Dashboard() {
                               type="checkbox"
                               className="checkbox"
                               checked={!!editItem.host}
-                              onChange={(e) => setEditItem({
-                                ...editItem,
-                                host: e.target.checked ? editItem.host || 0 : null
-                              })}
+                              onChange={(e) => {
+                                const isVmChecked = e.target.checked;
+                                if (isVmChecked) {
+                                  // Get available hosts excluding the current server
+                                  const availableHosts = hostServers.filter(s => s.id !== editItem.id);
+                                  const newHost = availableHosts.length > 0 ? availableHosts[0].id : null;
+                                  setEditItem({
+                                    ...editItem,
+                                    host: newHost
+                                  });
+                                } else {
+                                  setEditItem({
+                                    ...editItem,
+                                    host: null
+                                  });
+                                }
+                              }}
+                              
                             />
                           </label>
                           {editItem.host !== null && (
-                            <select
-                              className="select select-bordered w-full"
-                              value={editItem.host}
-                              onChange={(e) => setEditItem({
-                                ...editItem,
-                                host: Number(e.target.value)
-                              })}
-                              required
-                            >
-                              <option disabled value="">Select host</option>
-                              {hostServers.map(server => (
-                                <option key={server.id} value={server.id}>
-                                  {server.name}
-                                </option>
-                              ))}
-                            </select>
-                          )}
+  <select
+    className="select select-bordered w-full"
+    value={editItem.host}
+    onChange={(e) => setEditItem({
+      ...editItem,
+      host: Number(e.target.value)
+    })}
+    required
+  >
+    <option disabled value="">Select host</option>
+    {hostServers
+      .filter(server => server.id !== editItem.id) // Exclude current server
+      .map(server => (
+        <option key={server.id} value={server.id}>
+          {server.name}
+        </option>
+      ))}
+  </select>
+)}
                         </div>
                       </div>
                     ) : (
@@ -473,6 +590,8 @@ export default function Dashboard() {
                             ...editItem,
                             port: Number(e.target.value)
                           })}
+                          min="0"
+                          max="65535"
                           required
                         />
                       </div>
@@ -497,7 +616,15 @@ export default function Dashboard() {
             {hostServers.map(server => (
               <div key={server.id} className="bg-base-200 p-4 rounded-lg">
                 <div className="flex items-center gap-2">
-                  <div className="font-bold text-lg flex-1">{server.name}</div>
+                  <div className="flex items-center gap-2 flex-1">
+                    <div className="font-bold text-lg">{server.name}</div>
+                    <button
+                      className="btn btn-xs btn-ghost text-primary"
+                      onClick={() => handleScan(server.id)}
+                    >
+                      <ScanSearch size={14} />
+                    </button>
+                  </div>
                   <button
                     className="btn btn-xs btn-ghost"
                     onClick={() => {
@@ -518,7 +645,7 @@ export default function Dashboard() {
                 
                 {sortedPorts(server.ports).map(port => (
                   <div key={port.id} className="ml-4 mt-2 flex items-center gap-2">
-                    <div className="badge badge-neutral">{port.port}</div>
+                    <div className="badge badge-neutral w-16">{port.port}</div>
                     <span className="ml-2 text-sm flex-1">{port.note}</span>
                     <button 
                       className="btn btn-xs btn-ghost"
@@ -531,7 +658,7 @@ export default function Dashboard() {
                     </button>
                     <button 
                       className="btn btn-xs btn-ghost text-error"
-                      onClick={() => handleDelete(1, port.id)}
+                      onClick={() => handleDelete(2, port.id)}
                     >
                       <Trash size={14} />
                     </button>
@@ -542,6 +669,12 @@ export default function Dashboard() {
                   <div key={vm.id} className="ml-4 mt-4 border-l-2 pl-4">
                     <div className="flex items-center gap-2">
                       <div className="font-medium">🖥️ {vm.name}</div>
+                      <button
+                    className="btn btn-xs btn-ghost text-primary"
+                    onClick={() => handleScan(vm.id)}
+                  >
+                    <ScanSearch size={14} />
+                  </button>
                       <div className="ml-auto flex gap-2">
                         <button
                           className="btn btn-xs btn-ghost"
@@ -554,7 +687,7 @@ export default function Dashboard() {
                         </button>
                         <button
                           className="btn btn-xs btn-ghost text-error"
-                          onClick={() => handleDelete(0, vm.id)}
+                          onClick={() => handleDelete(1, vm.id)}
                         >
                           <Trash size={14} />
                         </button>
@@ -563,7 +696,7 @@ export default function Dashboard() {
                     <div className="text-sm opacity-75">{vm.ip}</div>
                     {sortedPorts(vm.ports).map(port => (
                       <div key={port.id} className="ml-4 mt-2 flex items-center gap-2">
-                        <div className="badge badge-neutral">{port.port}</div>
+                        <div className="badge badge-neutral w-16">{port.port}</div>
                         <span className="ml-2 text-sm flex-1">{port.note}</span>
                         <button 
                           className="btn btn-xs btn-ghost"
@@ -576,7 +709,7 @@ export default function Dashboard() {
                         </button>
                         <button 
                           className="btn btn-xs btn-ghost text-error"
-                          onClick={() => handleDelete(1, port.id)}
+                          onClick={() => handleDelete(2, port.id)}
                         >
                           <Trash size={14} />
                         </button>
@@ -589,6 +722,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
