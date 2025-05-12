@@ -2,12 +2,12 @@ services:
   web:
     image: haedlessdev/portnote:latest
     ports:
-      - "3001:3001"
+      - "3001:3000"
     environment:
-      JWT_SECRET: 9953544 # Replace with a secure random string
-      USER_SECRET: 9953544 # Replace with a secure random string
-      LOGIN_USERNAME: zhoule # Replace with a username
-      LOGIN_PASSWORD: zhoule # Replace with a custom password
+      JWT_SECRET: 9953544
+      USER_SECRET: 9953544
+      LOGIN_USERNAME: zhoule
+      LOGIN_PASSWORD: zhoule
       DATABASE_URL: "postgresql://postgres:postgres@db:5432/postgres"
   
   agent:
